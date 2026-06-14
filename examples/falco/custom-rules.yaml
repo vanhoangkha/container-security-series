@@ -1,0 +1,129 @@
+# Custom Falco Rules for Platform Engineers
+# Place in: /etc/falco/rules.d/custom-rules.yaml
+# These supplement (not replace) the default community rules.
+
+# --- Container Escape Detection ---
+
+- rule: Container Escape via Sensitive Mount
+  desc: Detect writes to paths used for container escape
+  condition: >
+    open_write and container
+    and (fd.name startswith /proc/sysrq-trigger
+         or fd.name startswith /proc/sys/kernel/core_pattern
+         or fd.name startswith /sys/kernel/uevent_helper
+         or fd.name startswith /sys/fs/cgroup)
+  output: >
+    CONTAINER ESCAPE ATTEMPT
+    (file=%fd.name proc=%proc.name user=%user.name
+     container=%container.name ns=%k8s.ns.name
+     pod=%k8s.pod.name image=%container.image.repository)
+  priority: CRITICAL
+  tags: [container, escape, mitre_privilege_escalation]
+
+# --- Cryptocurrency Mining ---
+
+- rule: Cryptominer Process Detected
+  desc: Known cryptominer binaries
+  condition: >
+    spawned_process and container
+    and proc.name in (xmrig, minerd, cpuminer, ethminer, stratum,
+                      minergate, cgminer, bfgminer, t-rex, nbminer)
+  output: >
+    CRYPTOMINER (proc=%proc.name cmdline=%proc.cmdline
+     container=%container.name ns=%k8s.ns.name pod=%k8s.pod.name)
+  priority: CRITICAL
+  tags: [cryptomining, mitre_resource_hijacking]
+
+- rule: Outbound Connection to Mining Pool Ports
+  desc: Connection to common mining pool ports
+  condition: >
+    outbound and container and fd.sport in (3333, 4444, 5555, 7777, 8888, 9999, 14444, 45700)
+  output: >
+    MINING POOL CONNECTION (dest=%fd.sip:%fd.sport
+     proc=%proc.name container=%container.name ns=%k8s.ns.name)
+  priority: HIGH
+  tags: [cryptomining, network]
+
+# --- Credential Access ---
+
+- rule: AWS Metadata Service Access from Application Pod
+  desc: Non-system pod accessing cloud metadata endpoint
+  condition: >
+    outbound and container
+    and fd.sip = "169.254.169.254"
+    and not k8s.ns.name in (kube-system, aws-node, cilium)
+  output: >
+    METADATA ACCESS (container=%container.name ns=%k8s.ns.name
+     pod=%k8s.pod.name connection=%fd.name proc=%proc.name)
+  priority: HIGH
+  tags: [credential_access, cloud, mitre_T1552]
+
+- rule: Service Account Token Read
+  desc: Process reading K8s service account token
+  condition: >
+    open_read and container
+    and fd.name = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+    and not proc.name in (coredns, kube-proxy, cilium-agent, falco)
+    and not k8s.ns.name in (kube-system, falco, kyverno, argocd)
+  output: >
+    SA TOKEN READ (proc=%proc.name container=%container.name
+     ns=%k8s.ns.name image=%container.image.repository)
+  priority: NOTICE
+  tags: [credential_access, kubernetes]
+
+# --- Reverse Shell ---
+
+- rule: Reverse Shell Detected
+  desc: Network connection from shell process (reverse shell indicator)
+  condition: >
+    spawned_process and container
+    and proc.name in (bash, sh, zsh, ash, dash)
+    and proc.args contains "-i"
+    and (fd.type = ipv4 or fd.type = ipv6)
+  output: >
+    REVERSE SHELL (proc=%proc.name cmdline=%proc.cmdline
+     container=%container.name ns=%k8s.ns.name fd=%fd.name)
+  priority: CRITICAL
+  tags: [reverse_shell, mitre_execution]
+
+# --- File Integrity ---
+
+- rule: Binary Modified in Container
+  desc: Write to binary directories indicates tampering
+  condition: >
+    open_write and container
+    and (fd.name startswith /bin/ or fd.name startswith /usr/bin/
+         or fd.name startswith /sbin/ or fd.name startswith /usr/sbin/)
+  output: >
+    BINARY MODIFIED (file=%fd.name proc=%proc.name
+     container=%container.name ns=%k8s.ns.name)
+  priority: ERROR
+  tags: [file_integrity, mitre_persistence]
+
+# --- AI/LLM Specific ---
+
+- rule: AI Workload K8s API Enumeration
+  desc: AI namespace pods should not call K8s API
+  condition: >
+    outbound and container
+    and k8s.ns.name startswith "ai-"
+    and fd.sip = "10.0.0.1" and fd.sport = 443
+  output: >
+    AI WORKLOAD K8S API CALL (container=%container.name
+     ns=%k8s.ns.name proc=%proc.name dest=%fd.sip:%fd.sport)
+  priority: HIGH
+  tags: [ai_workload, lateral_movement]
+
+# --- Tuning: Known False Positives ---
+
+- rule: Read sensitive file untrusted
+  append: true
+  condition: >
+    and not (proc.name = "java" and fd.name startswith "/proc/self/")
+    and not (proc.name in (node, python3) and fd.name = "/etc/resolv.conf")
+
+- rule: Shell Spawned by Web Server
+  append: true
+  condition: >
+    and not (proc.pname = "node" and proc.cmdline startswith "sh -c curl localhost")
+    and not (proc.pname = "python3" and proc.cmdline startswith "sh -c pg_isready")

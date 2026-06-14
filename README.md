@@ -40,6 +40,8 @@
 | 6 | [Security Tools & Platforms](./docs/part6-security-tools-platforms.md) | Trivy, Falco, Wiz, Sysdig, Aqua, Snyk — comparison & cost analysis | 20 min |
 | 7 | [Best Practices & Checklist](./docs/part7-best-practices-checklist.md) | 75-item checklist, maturity model, roadmap, automation scripts | 20 min |
 | 8 | [K8s Security in the AI Era](./docs/part8-kubernetes-security-ai-era.md) | AI agent attacks, LLM threats, sandboxing, causal chain detection | 25 min |
+| 9 | [Platform Engineering Reference Architecture](./docs/part9-platform-engineering-reference-architecture.md) | Terraform + ArgoCD + CI/CD + security stack (end-to-end) | 30 min |
+| 10 | [Multi-tenancy & Developer Experience](./docs/part10-multitenancy-developer-experience.md) | Tenant isolation, Day-2 ops, security SLOs, golden images | 25 min |
 
 ---
 
@@ -57,6 +59,9 @@
 | "How to detect runtime attacks?" | [Part 3 — Runtime Security](./docs/part3-runtime-security-monitoring.md) |
 | "How to secure CI/CD pipeline?" | [Part 2 — Supply Chain](./docs/part2-image-security-supply-chain.md) |
 | "What about AI/LLM workloads?" | [Part 8 — AI Era](./docs/part8-kubernetes-security-ai-era.md) |
+| "I'm a platform engineer — where to start?" | [Part 9 — Reference Architecture](./docs/part9-platform-engineering-reference-architecture.md) |
+| "Multi-tenancy and Day-2 ops?" | [Part 10 — Multi-tenancy & DX](./docs/part10-multitenancy-developer-experience.md) |
+| "Give me deployable code" | [examples/](./examples/) — Terraform, Kyverno, Falco, scripts |
 
 ---
 
@@ -101,19 +106,30 @@ Comply:   Prisma Cloud (broadest coverage)
 
 ```
 container-security-series/
-├── README.md                 ← You are here
-├── LICENSE                   ← MIT License
-├── CONTRIBUTING.md           ← How to contribute
+├── README.md
+├── LICENSE
+├── CONTRIBUTING.md
 ├── .gitignore
-└── docs/
-    ├── part1-introduction-overview.md
-    ├── part2-image-security-supply-chain.md
-    ├── part3-runtime-security-monitoring.md
-    ├── part4-kubernetes-security-hardening.md
-    ├── part5-network-security-zero-trust.md
-    ├── part6-security-tools-platforms.md
-    ├── part7-best-practices-checklist.md
-    └── part8-kubernetes-security-ai-era.md
+├── docs/
+│   ├── part1-introduction-overview.md
+│   ├── part2-image-security-supply-chain.md
+│   ├── part3-runtime-security-monitoring.md
+│   ├── part4-kubernetes-security-hardening.md
+│   ├── part5-network-security-zero-trust.md
+│   ├── part6-security-tools-platforms.md
+│   ├── part7-best-practices-checklist.md
+│   ├── part8-kubernetes-security-ai-era.md
+│   ├── part9-platform-engineering-reference-architecture.md
+│   └── part10-multitenancy-developer-experience.md
+└── examples/
+    ├── terraform/main.tf          # Hardened EKS (VPC + KMS + ECR + GuardDuty)
+    ├── kyverno/policies.yaml      # 10 production admission policies
+    ├── falco/values.yaml          # Production Helm values
+    ├── falco/custom-rules.yaml    # 10 custom detection rules
+    └── scripts/
+        ├── bootstrap-security-stack.sh   # Deploy full stack (run once)
+        ├── security-audit.sh             # Quick posture assessment
+        └── onboard-tenant.sh             # Create secured namespace
 ```
 
 ---

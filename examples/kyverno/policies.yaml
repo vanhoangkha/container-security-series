@@ -1,0 +1,276 @@
+# Kyverno Production Policy Set
+# Apply: kubectl apply -f examples/kyverno/
+
+---
+# 1. Disallow privileged containers
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: disallow-privileged
+  annotations:
+    policies.kyverno.io/title: Disallow Privileged Containers
+    policies.kyverno.io/severity: high
+spec:
+  validationFailureAction: Enforce
+  rules:
+    - name: no-privileged
+      match:
+        any:
+          - resources:
+              kinds: ["Pod"]
+      exclude:
+        any:
+          - resources:
+              namespaces: ["kube-system", "falco", "cilium"]
+      validate:
+        message: "Privileged containers are not allowed."
+        pattern:
+          spec:
+            containers:
+              - securityContext:
+                  privileged: "!true"
+            initContainers:
+              - securityContext:
+                  privileged: "!true"
+
+---
+# 2. Require non-root
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: require-run-as-nonroot
+spec:
+  validationFailureAction: Enforce
+  rules:
+    - name: run-as-nonroot
+      match:
+        any:
+          - resources:
+              kinds: ["Pod"]
+              namespaces: ["team-*"]
+      validate:
+        message: "Containers must run as non-root. Set runAsNonRoot: true"
+        pattern:
+          spec:
+            containers:
+              - securityContext:
+                  runAsNonRoot: true
+
+---
+# 3. Require resource limits
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: require-resource-limits
+spec:
+  validationFailureAction: Enforce
+  rules:
+    - name: check-limits
+      match:
+        any:
+          - resources:
+              kinds: ["Pod"]
+              namespaces: ["team-*"]
+      validate:
+        message: "CPU and memory limits are required."
+        pattern:
+          spec:
+            containers:
+              - resources:
+                  limits:
+                    memory: "?*"
+                    cpu: "?*"
+
+---
+# 4. Disallow :latest tag
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: disallow-latest-tag
+spec:
+  validationFailureAction: Enforce
+  rules:
+    - name: no-latest
+      match:
+        any:
+          - resources:
+              kinds: ["Pod"]
+              namespaces: ["team-*"]
+      validate:
+        message: "Image tag ':latest' is not allowed. Use a specific version."
+        pattern:
+          spec:
+            containers:
+              - image: "!*:latest"
+
+---
+# 5. Restrict image registries
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: restrict-registries
+spec:
+  validationFailureAction: Enforce
+  rules:
+    - name: allowed-registries
+      match:
+        any:
+          - resources:
+              kinds: ["Pod"]
+      exclude:
+        any:
+          - resources:
+              namespaces: ["kube-system"]
+      validate:
+        message: >
+          Images must come from approved registries:
+          your ECR, gcr.io/distroless, or registry.company.com
+        deny:
+          conditions:
+            all:
+              - key: "{{ images.containers.*.registry }}"
+                operator: AnyNotIn
+                value:
+                  - "*.dkr.ecr.*.amazonaws.com"
+                  - "gcr.io"
+                  - "registry.company.com"
+                  - "registry.k8s.io"
+                  - "docker.io/library"
+
+---
+# 6. Verify image signatures (Cosign keyless)
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: verify-image-signatures
+spec:
+  validationFailureAction: Enforce
+  webhookTimeoutSeconds: 30
+  rules:
+    - name: verify-signature
+      match:
+        any:
+          - resources:
+              kinds: ["Pod"]
+              namespaces: ["team-*"]
+      verifyImages:
+        - imageReferences:
+            - "*.dkr.ecr.*.amazonaws.com/*"
+          attestors:
+            - entries:
+                - keyless:
+                    subject: "https://github.com/company-org/*"
+                    issuer: "https://token.actions.githubusercontent.com"
+                    rekor:
+                      url: https://rekor.sigstore.dev
+
+---
+# 7. Require drop ALL capabilities
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: drop-all-capabilities
+spec:
+  validationFailureAction: Enforce
+  rules:
+    - name: drop-all
+      match:
+        any:
+          - resources:
+              kinds: ["Pod"]
+              namespaces: ["team-*"]
+      validate:
+        message: "Containers must drop ALL capabilities."
+        pattern:
+          spec:
+            containers:
+              - securityContext:
+                  capabilities:
+                    drop: ["ALL"]
+
+---
+# 8. Disallow hostPath volumes
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: disallow-host-path
+spec:
+  validationFailureAction: Enforce
+  rules:
+    - name: no-hostpath
+      match:
+        any:
+          - resources:
+              kinds: ["Pod"]
+      exclude:
+        any:
+          - resources:
+              namespaces: ["kube-system", "falco"]
+      validate:
+        message: "hostPath volumes are not allowed."
+        deny:
+          conditions:
+            any:
+              - key: "{{ request.object.spec.volumes[?hostPath] | length(@) }}"
+                operator: GreaterThan
+                value: 0
+
+---
+# 9. Require read-only root filesystem
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: require-readonly-rootfs
+spec:
+  validationFailureAction: Audit  # Start with Audit, move to Enforce
+  rules:
+    - name: readonly-rootfs
+      match:
+        any:
+          - resources:
+              kinds: ["Pod"]
+              namespaces: ["team-*"]
+      validate:
+        message: "Root filesystem must be read-only."
+        pattern:
+          spec:
+            containers:
+              - securityContext:
+                  readOnlyRootFilesystem: true
+
+---
+# 10. Auto-generate NetworkPolicy for new namespaces
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: generate-default-deny
+spec:
+  rules:
+    - name: default-deny-on-ns-creation
+      match:
+        any:
+          - resources:
+              kinds: ["Namespace"]
+              selector:
+                matchLabels:
+                  tenant: "*"
+      generate:
+        synchronize: true
+        apiVersion: networking.k8s.io/v1
+        kind: NetworkPolicy
+        name: default-deny-all
+        namespace: "{{ request.object.metadata.name }}"
+        data:
+          spec:
+            podSelector: {}
+            policyTypes:
+              - Ingress
+              - Egress
+            egress:
+              - to:
+                  - namespaceSelector:
+                      matchLabels:
+                        kubernetes.io/metadata.name: kube-system
+                ports:
+                  - port: 53
+                    protocol: UDP

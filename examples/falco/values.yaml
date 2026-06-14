@@ -1,0 +1,69 @@
+# Falco Production Helm Values
+# Install: helm install falco falcosecurity/falco -n falco -f values.yaml
+
+driver:
+  kind: ebpf
+
+falco:
+  json_output: true
+  json_include_output_property: true
+  json_include_tags_property: true
+
+  rules_file:
+    - /etc/falco/falco_rules.yaml
+    - /etc/falco/falco_rules.local.yaml
+    - /etc/falco/rules.d
+
+  priority: notice
+
+  syscall_event_drops:
+    threshold: 0.1
+    actions: [log, alert]
+
+  syscall_buf_size_preset: 4
+
+  metrics:
+    enabled: true
+    interval: 15s
+    output_rule: true
+
+falcosidekick:
+  enabled: true
+  config:
+    slack:
+      webhookurl: ""  # Set via --set falcosidekick.config.slack.webhookurl=<URL>
+      channel: "#security-alerts"
+      minimumpriority: "warning"
+
+    elasticsearch:
+      hostport: ""    # Set if using ELK
+      index: "falco-alerts"
+      minimumpriority: "notice"
+
+    aws:
+      securityhub:
+        region: "ap-southeast-1"
+        minimumpriority: "high"
+
+    pagerduty:
+      routingkey: "" # Set for on-call
+      minimumpriority: "critical"
+
+    webhook:
+      address: ""    # Response engine endpoint
+      minimumpriority: "high"
+
+  webui:
+    enabled: true
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 512Mi
+  limits:
+    cpu: 1000m
+    memory: 1024Mi
+
+tolerations:
+  - effect: NoSchedule
+    operator: Exists
