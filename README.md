@@ -62,6 +62,7 @@
 | "I'm a platform engineer — where to start?" | [Part 9 — Reference Architecture](./docs/part9-platform-engineering-reference-architecture.md) |
 | "Multi-tenancy and Day-2 ops?" | [Part 10 — Multi-tenancy & DX](./docs/part10-multitenancy-developer-experience.md) |
 | "Give me deployable code" | [examples/](./examples/) — Terraform, Kyverno, Falco, scripts |
+| "How to become a Platform Engineer?" | [Career Guide](./docs/platform-engineer-career-guide.md) |
 
 ---
 
