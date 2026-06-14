@@ -686,6 +686,372 @@ Row 4: Access Control
 
 ---
 
+## 10. Rollout Security
+
+Triển khai ứng dụng an toàn không chỉ là chuyện deploy xong rồi thôi.
+Platform engineer cần đảm bảo rollout có khả năng tự rollback khi phát hiện vấn đề bảo mật.
+
+### 10.1. Các Kiểu Rollout Và Rủi Ro Bảo Mật
+
+| Kiểu Rollout | Mô Tả | Rủi Ro Nếu Không Có Security Gate |
+|-------------|--------|-----------------------------------|
+| **Blue-Green** | Chuyển toàn bộ traffic sang phiên bản mới | Image bị compromise -> toàn bộ user bị ảnh hưởng ngay lập tức |
+| **Canary** | Chuyển dần 5% -> 25% -> 100% | Phát hiện sớm hơn, nhưng cần metrics để biết khi nào dừng |
+| **Progressive** | Tăng dần dựa trên metrics/SLO | Tốt nhất nếu kết hợp security signals |
+| **Shadow** | Gửi traffic copy, so sánh response | An toàn nhất, nhưng phức tạp |
+
+### 10.2. Argo Rollouts + Falco: Tự Động Rollback Khi Phát Hiện Tấn Công
+
+```yaml
+# Argo Rollouts: canary với analysis dựa trên Falco alerts
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: secure-app
+  namespace: team-payments
+spec:
+  replicas: 10
+  strategy:
+    canary:
+      steps:
+        # Bước 1: triển khai 10% traffic
+        - setWeight: 10
+        - pause: { duration: 5m }
+        # Bước 2: kiểm tra security metrics
+        - analysis:
+            templates:
+              - templateName: security-check
+        # Bước 3: tăng lên 50%
+        - setWeight: 50
+        - pause: { duration: 10m }
+        - analysis:
+            templates:
+              - templateName: security-check
+        # Bước 4: triển khai toàn bộ
+        - setWeight: 100
+      # Tự động rollback nếu analysis fail
+      abortScaleDownDelaySeconds: 30
+  selector:
+    matchLabels:
+      app: secure-app
+  template:
+    metadata:
+      labels:
+        app: secure-app
+    spec:
+      containers:
+        - name: app
+          image: registry.company.com/payments:v2.1.0@sha256:abc...
+---
+# AnalysisTemplate: kiểm tra Falco alerts trong khoảng thời gian rollout
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: security-check
+spec:
+  metrics:
+    # Metric 1: Không có Falco CRITICAL/ERROR alerts từ canary pods
+    - name: falco-critical-alerts
+      provider:
+        prometheus:
+          address: http://prometheus.monitoring:9090
+          query: |
+            sum(increase(
+              falco_events{priority=~"Critical|Error", k8s_pod_name=~"secure-app-.*"}[5m]
+            )) OR vector(0)
+      successCondition: result[0] == 0
+      failureLimit: 0
+      interval: 60s
+      count: 5
+
+    # Metric 2: Không có network policy violations từ canary pods
+    - name: network-violations
+      provider:
+        prometheus:
+          address: http://prometheus.monitoring:9090
+          query: |
+            sum(increase(
+              hubble_drop_total{source_pod=~"secure-app-.*", reason="POLICY_DENIED"}[5m]
+            )) OR vector(0)
+      successCondition: result[0] < 5
+      failureLimit: 0
+      interval: 60s
+      count: 5
+
+    # Metric 3: Error rate không tăng (bao gồm 4xx/5xx bất thường)
+    - name: error-rate
+      provider:
+        prometheus:
+          address: http://prometheus.monitoring:9090
+          query: |
+            sum(rate(http_requests_total{app="secure-app", status=~"5.."}[2m]))
+            / sum(rate(http_requests_total{app="secure-app"}[2m])) * 100
+      successCondition: result[0] < 1
+      failureLimit: 2
+      interval: 30s
+      count: 10
+```
+
+### 10.3. Luồng Hoạt Động
+
+```
+Developer push code -> CI build + scan + sign -> ArgoCD sync Rollout
+                                                        |
+                                                        v
+                                              Canary 10% traffic
+                                                        |
+                                                        v
+                                          AnalysisTemplate chạy 5 phút
+                                          Kiểm tra:
+                                            - Falco alerts == 0?
+                                            - Network violations < 5?
+                                            - Error rate < 1%?
+                                                        |
+                                              +---------+---------+
+                                              |                   |
+                                           PASS               FAIL
+                                              |                   |
+                                              v                   v
+                                      Tăng lên 50%        TỰ ĐỘNG ROLLBACK
+                                              |            (30 giây)
+                                              v
+                                      Kiểm tra lại...
+                                              |
+                                              v
+                                      100% traffic
+```
+
+### 10.4. Feature Flags Kết Hợp Security
+
+```yaml
+# Kyverno: kiểm tra annotation yêu cầu feature flag service
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: require-feature-flag-annotation
+spec:
+  validationFailureAction: Audit
+  rules:
+    - name: check-feature-flag
+      match:
+        any:
+          - resources:
+              kinds: ["Rollout"]
+              namespaces: ["team-*"]
+      validate:
+        message: "Rollout phải có annotation chỉ định feature flag service"
+        pattern:
+          metadata:
+            annotations:
+              platform.company.com/feature-flags: "?*"
+```
+
+### 10.5. Rollback Tự Động Khi Falco Phát Hiện Container Escape
+
+```bash
+#!/bin/bash
+# falco-triggered-rollback.sh
+# Chạy bởi Falcosidekick webhook khi nhận CRITICAL alert
+
+NAMESPACE="${1}"
+ROLLOUT_NAME="${2}"
+
+echo "$(date -u +%FT%TZ) SECURITY ROLLBACK: $NAMESPACE/$ROLLOUT_NAME"
+echo "  Lý do: Falco CRITICAL alert detected"
+
+# Abort rollout ngay lập tức
+kubectl argo rollouts abort "$ROLLOUT_NAME" -n "$NAMESPACE"
+
+# Thông báo team
+curl -X POST "$SLACK_WEBHOOK" -H 'Content-Type: application/json' \
+  -d "{\"text\":\"SECURITY ROLLBACK: $NAMESPACE/$ROLLOUT_NAME đã bị abort do Falco CRITICAL alert. Kiểm tra ngay.\"}"
+```
+
+---
+
+## 11. Observability-as-Security
+
+Observability không chỉ để debug performance — nó là lớp phòng thủ cuối cùng khi tất cả các lớp khác thất bại.
+
+### 11.1. Security Metrics Cần Thu Thập
+
+| Metric | Nguồn | Ý Nghĩa |
+|--------|--------|---------|
+| `falco_events{priority="Critical"}` | Falco | Tấn công đang xảy ra |
+| `kyverno_policy_results_total{rule_result="fail"}` | Kyverno | Vi phạm chính sách |
+| `hubble_drop_total{reason="POLICY_DENIED"}` | Cilium/Hubble | Kết nối bị chặn |
+| `container_cpu_usage_seconds_total` (đột biến) | cAdvisor | Cryptomining indicator |
+| `kube_pod_status_phase{phase="Failed"}` | kube-state-metrics | Pod bất thường |
+| `apiserver_audit_event_total` | K8s API Server | Hoạt động API bất thường |
+| Số images chưa scan | Trivy/Kyverno report | Lỗ hổng coverage |
+| Thời gian CVE chưa patch | Trivy continuous scan | Nợ kỹ thuật bảo mật |
+
+### 11.2. Grafana Security Dashboard
+
+```json
+{
+  "dashboard": {
+    "title": "Platform Security Posture",
+    "panels": [
+      {
+        "title": "Falco Alerts (24h)",
+        "type": "stat",
+        "targets": [{"expr": "sum(increase(falco_events[24h])) by (priority)"}]
+      },
+      {
+        "title": "Kyverno Violations",
+        "type": "timeseries",
+        "targets": [{"expr": "sum(rate(kyverno_policy_results_total{rule_result='fail'}[5m])) by (rule_name)"}]
+      },
+      {
+        "title": "Network Denied Connections",
+        "type": "timeseries",
+        "targets": [{"expr": "sum(rate(hubble_drop_total{reason='POLICY_DENIED'}[5m])) by (source_namespace)"}]
+      },
+      {
+        "title": "Pods Chạy As Root",
+        "type": "stat",
+        "targets": [{"expr": "count(kube_pod_container_info{container!='POD'}) - count(kube_pod_container_status_running{container!='POD'} * on(pod) kube_pod_security_context{run_as_non_root='true'})"}]
+      },
+      {
+        "title": "Images Có CRITICAL CVE",
+        "type": "stat",
+        "targets": [{"expr": "trivy_image_vulnerabilities{severity='Critical'}"}]
+      },
+      {
+        "title": "Certificate Hết Hạn < 14 Ngày",
+        "type": "stat",
+        "targets": [{"expr": "count(certmanager_certificate_expiration_timestamp_seconds - time() < 14*24*3600)"}]
+      }
+    ]
+  }
+}
+```
+
+### 11.3. SLO Cho Bảo Mật
+
+Đặt SLO (Service Level Objectives) cho security giống như đặt SLO cho availability:
+
+```yaml
+# Prometheus recording rules cho Security SLOs
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: security-slos
+spec:
+  groups:
+    - name: security-slo
+      rules:
+        # SLO: 99% pods phải comply với PSS Restricted
+        - record: security:pss_compliance_ratio
+          expr: |
+            (
+              count(kube_pod_labels{label_pod_security_kubernetes_io_enforce="restricted"})
+              / count(kube_pod_info)
+            )
+
+        # SLO: MTTD (Mean Time To Detect) < 60s
+        - record: security:mttd_seconds
+          expr: |
+            avg(falco_event_detection_latency_seconds)
+
+        # SLO: 100% images trong production phải được scan
+        - record: security:scan_coverage_ratio
+          expr: |
+            (
+              count(trivy_image_last_scan_timestamp > 0)
+              / count(kube_pod_container_info{namespace=~"team-.*"})
+            )
+
+        # Alert khi SLO vi phạm
+        - alert: SecuritySLOBreach_PSSCompliance
+          expr: security:pss_compliance_ratio < 0.99
+          for: 10m
+          labels:
+            severity: warning
+            slo: pss-compliance
+          annotations:
+            summary: "PSS compliance dưới 99% (hiện tại: {{ $value | humanizePercentage }})"
+
+        - alert: SecuritySLOBreach_ScanCoverage
+          expr: security:scan_coverage_ratio < 1.0
+          for: 5m
+          labels:
+            severity: critical
+            slo: scan-coverage
+          annotations:
+            summary: "Có images chưa được scan trong production"
+```
+
+### 11.4. Alerting Thông Minh (Tránh Alert Fatigue)
+
+| Mức Độ | Kênh Thông Báo | Ví Dụ |
+|--------|---------------|-------|
+| **Critical** | PagerDuty (gọi điện on-call) | Container escape, cryptominer, reverse shell |
+| **High** | Slack #security-alerts + ticket tự tạo | Metadata access, unsigned image, CVE critical mới |
+| **Warning** | Slack #security-daily (digest hàng ngày) | Policy violation, RBAC audit fail, certificate sắp hết hạn |
+| **Notice** | Dashboard only (không notify) | SA token read, new outbound connection (baseline) |
+
+```yaml
+# Falcosidekick routing theo priority
+falcosidekick:
+  config:
+    pagerduty:
+      routingkey: "xxx"
+      minimumpriority: "critical"    # Chỉ critical mới gọi on-call
+    slack:
+      webhookurl: "https://hooks.slack.com/..."
+      minimumpriority: "warning"     # Warning trở lên vào Slack
+      messageformat: |
+        *{{ .Priority }}* | `{{ .Rule }}`
+        Namespace: {{ .Output_fields.k8s_ns_name }}
+        Pod: {{ .Output_fields.k8s_pod_name }}
+        Chi tiết: {{ .Output }}
+```
+
+### 11.5. Báo Cáo Bảo Mật Hàng Tuần (Tự Động)
+
+```bash
+#!/bin/bash
+# weekly-security-report.sh
+# Chạy bằng CronJob mỗi thứ Hai 8:00 AM
+
+WEEK=$(date -d "7 days ago" +%Y-%m-%d)
+TODAY=$(date +%Y-%m-%d)
+
+cat <<EOF
+========================================
+  BÁO CÁO BẢO MẬT HÀNG TUẦN
+  Tuần: $WEEK đến $TODAY
+  Cluster: $(kubectl config current-context)
+========================================
+
+1. SỰ CỐ BẢO MẬT
+   - Falco Critical alerts:   $(curl -s "prometheus:9090/api/v1/query?query=sum(increase(falco_events{priority='Critical'}[7d]))" | jq '.data.result[0].value[1]')
+   - Falco High alerts:       $(curl -s "prometheus:9090/api/v1/query?query=sum(increase(falco_events{priority='Error'}[7d]))" | jq '.data.result[0].value[1]')
+
+2. TUÂN THỦ CHÍNH SÁCH
+   - Kyverno violations:      $(kubectl get policyreport -A -o json | jq '[.items[].results[] | select(.result=="fail")] | length')
+   - PSS Compliance:          $(kubectl get ns -l pod-security.kubernetes.io/enforce=restricted --no-headers | wc -l) / $(kubectl get ns --no-headers | wc -l) namespaces
+
+3. LỖ HỔNG
+   - Images có CRITICAL CVE:  (xem Trivy dashboard)
+   - CVE cũ nhất chưa patch:  (xem ticket backlog)
+
+4. NETWORK
+   - Connections bị chặn:     $(curl -s "prometheus:9090/api/v1/query?query=sum(increase(hubble_drop_total[7d]))" | jq '.data.result[0].value[1]')
+   - Namespaces thiếu NP:     $(for ns in $(kubectl get ns -o name); do kubectl get networkpolicy -n ${ns#namespace/} --no-headers 2>/dev/null | wc -l | grep -q "^0$" && echo "$ns"; done | wc -l)
+
+5. HÀNH ĐỘNG CẦN THỰC HIỆN
+   - [ ] Patch CVE critical trong 24h
+   - [ ] Review Falco alerts (false positive tuning)
+   - [ ] Kiểm tra certificate sắp hết hạn
+========================================
+EOF
+```
+
+---
+
 ## References
 
 - Terraform AWS EKS Module documentation
@@ -694,6 +1060,8 @@ Row 4: Access Control
 - Falco Helm Chart Configuration
 - Kyverno Policy Library
 - AWS EKS Best Practices Guide
+- Argo Rollouts documentation
+- Platform Engineering Roadmap (mbianchidev)
 
 ---
 

@@ -149,6 +149,32 @@ container-security-series/
 
 ---
 
+## Mapping Voi Platform Engineering Roadmap
+
+Series nay cover phan **Security** cua [Platform Engineering Roadmap](https://mbianchidev.github.io/platform-engineering-roadmap/) (by mbianchidev).
+
+| Roadmap Topic | Series Coverage | Part |
+|--------------|-----------------|------|
+| Encryption, Certificates, TLS, PKI | mTLS, Sigstore, certificate management | 2, 5 |
+| Authentication, Authorization, IAM | RBAC, Pod Identity, OIDC, Service Accounts | 4, 9 |
+| OPA (Open Policy Agent) | OPA Gatekeeper + Kyverno so sanh chi tiet | 4, 6 |
+| DevSecOps (SAST, DAST, Container Scanning) | Trivy, Grype, Hadolint, CI/CD pipeline | 2, 6, 9 |
+| Threat Detection | Falco, Tetragon, GuardDuty, eBPF | 3, 8 |
+| CNAPP, CDR | Wiz, Sysdig, Aqua, Prisma Cloud | 6 |
+| Container (Docker, OCI, Registry) | Image hardening, scanning, signing, SBOM | 2 |
+| Kubernetes (full topic list) | Hardening, PSS, NetworkPolicy, Secrets | 3, 4, 5 |
+| Service Mesh (Istio, Linkerd) | mTLS, AuthorizationPolicy, Cilium mesh | 5 |
+| CNI (Cilium) | Cilium vs Calico, L7 policies, Hubble | 5 |
+| GitOps (ArgoCD, FluxCD) | ArgoCD security config, drift detection | 9 |
+| IaC (Terraform) | Hardened EKS module, KMS, GuardDuty | 9 |
+| Rollout (Canary, Blue-Green) | Argo Rollouts + Falco, auto-rollback | 9 |
+| Observability (Prometheus, Grafana) | Security dashboards, SLOs, alerting | 9 |
+| Platform Engineering (IDP, DevEx) | Self-service, golden images, onboarding | 10 |
+| Multitenancy | Hard vs soft, namespace isolation, quotas | 10 |
+| AI Workload Security | AI agent attacks, LLM threats, sandboxing | 8 |
+
+---
+
 ## 🤝 Contributing
 
 Contributions are welcome! See [CONTRIBUTING.md](./CONTRIBUTING.md) for guidelines.
