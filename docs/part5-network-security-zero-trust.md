@@ -40,7 +40,7 @@ Containers spin up và down trong vài giây, microservices communicate across n
 Traditional (Castle & Moat):     Zero Trust:
 ┌────────────────────────┐       ┌────────────────────────┐
 │  TRUSTED ZONE          │       │  UNTRUSTED EVERYWHERE  │
-│  ┌──┐ ← → ┌──┐       │       │  ┌──┐ ←✓→ ┌──┐       │
+│ ┌──┐ ← → ┌──┐ │ │ ┌──┐ ←→ ┌──┐ │
 │  │A │      │B │ Trust  │       │  │A │ mTLS │B │ Verify │
 │  └──┘      └──┘ within │       │  └──┘      └──┘ every  │
 │                        │       │                  call   │
@@ -138,11 +138,11 @@ Service mesh là **infrastructure layer** facilitating secure communication betw
 
 | Feature | Istio | Linkerd | Cilium Service Mesh |
 |---------|-------|---------|-------------------|
-| **mTLS** | ✅ Automatic | ✅ Automatic | ✅ Automatic |
+| **mTLS** | Automatic | Automatic | Automatic |
 | **Proxy** | Envoy (sidecar) | linkerd2-proxy (sidecar) | eBPF (no sidecar) |
 | **Performance** | Higher latency | Lower latency | Lowest (kernel-level) |
 | **Complexity** | High | Medium | Medium |
-| **L7 policies** | ✅ Full | ✅ Basic | ✅ Full |
+| **L7 policies** | Full | Basic | Full |
 | **Resource usage** | High | Low | Lowest |
 | **CNCF Status** | Graduated | Graduated | Graduated |
 | **Best for** | Feature-rich enterprise | Simple, lightweight | Performance-critical |
@@ -315,16 +315,16 @@ spec:
 | Feature | Cilium | Calico |
 |---------|--------|--------|
 | **Dataplane** | eBPF (kernel-level) | iptables or eBPF (optional) |
-| **Performance** | ⚡ Higher throughput, lower latency | Good, eBPF mode matches Cilium |
+| **Performance** | Higher throughput, lower latency | Good, eBPF mode matches Cilium |
 | **NetworkPolicy** | Full + CiliumNetworkPolicy (L7) | Full + GlobalNetworkPolicy |
-| **L7 (HTTP/gRPC)** | ✅ Native (path, method, headers) | ❌ (need service mesh) |
-| **DNS policies** | ✅ Native FQDN-based rules | ❌ (need NetworkSet workaround) |
-| **Service mesh** | ✅ Built-in (sidecar-less, eBPF) | ❌ (pair with Istio/Linkerd) |
-| **Encryption** | ✅ WireGuard / IPsec | ✅ WireGuard |
-| **Observability** | ✅ Hubble (native, excellent) | Calico flow logs (basic) |
-| **Multi-cluster** | ✅ Cluster Mesh | ✅ Calico Federation |
-| **BGP** | ✅ | ✅ (stronger, more mature) |
-| **Windows** | ❌ | ✅ |
+| **L7 (HTTP/gRPC)** | Native (path, method, headers) | (need service mesh) |
+| **DNS policies** | Native FQDN-based rules | (need NetworkSet workaround) |
+| **Service mesh** | Built-in (sidecar-less, eBPF) | (pair with Istio/Linkerd) |
+| **Encryption** | WireGuard / IPsec | WireGuard |
+| **Observability** | Hubble (native, excellent) | Calico flow logs (basic) |
+| **Multi-cluster** | Cluster Mesh | Calico Federation |
+| **BGP** | Yes | (stronger, more mature) |
+| **Windows** | No | Yes |
 | **Maturity** | CNCF Graduated (2024) | Established (10+ years) |
 | **Resource usage** | Higher (eBPF maps in kernel) | Lower (lighter footprint) |
 | **Learning curve** | Steeper (eBPF concepts) | Gentler (traditional networking) |

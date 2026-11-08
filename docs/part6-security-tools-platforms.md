@@ -186,9 +186,9 @@ kubectl exec -n kube-system ds/tetragon -c tetragon -- \
 | Feature | Falco | Tetragon | GuardDuty (EKS) | Sysdig Secure |
 |---------|-------|----------|-----------------|---------------|
 | **Type** | OSS | OSS | Managed | Commercial |
-| **Detection** | ✅ | ✅ | ✅ | ✅ |
-| **Enforcement** | ❌ (alert only) | ✅ (Sigkill) | ❌ | ✅ |
-| **Custom rules** | ✅ | ✅ | ❌ | ✅ |
+| **Detection** | Yes | Yes | Yes | Yes |
+| **Enforcement** | (alert only) | (Sigkill) | No | Yes |
+| **Custom rules** | Yes | Yes | No | Yes |
 | **Cloud integration** | Via Falcosidekick | Hubble | Native AWS | Multi-cloud |
 | **Overhead** | Low | Low | Zero (agentless) | Medium |
 | **Cost** | Free | Free | Pay per use | License |
@@ -296,10 +296,10 @@ violation[{"msg": msg}] {
 |----------|---------|----------------|
 | **Policy language** | YAML/JSON | Rego |
 | **Learning curve** | Low | High |
-| **Mutating** | ✅ Native | ❌ Separate webhook |
-| **Generate resources** | ✅ | ❌ |
-| **Image verification** | ✅ Native | Via external data |
-| **Audit mode** | ✅ | ✅ |
+| **Mutating** | Native | Separate webhook |
+| **Generate resources** | Yes | No |
+| **Image verification** | Native | Via external data |
+| **Audit mode** | Yes | Yes |
 | **Multi-platform** | K8s only | Any (OPA is general) |
 | **Community** | Growing fast | Established |
 

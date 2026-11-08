@@ -55,7 +55,7 @@ Một Kubernetes cluster mới cài đặt mặc định cho phép:
 ### 3.1. Principle of Least Privilege
 
 ```yaml
-# ✅ Good: Minimal role - read-only pods in one namespace
+# Good: Minimal role - read-only pods in one namespace
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
@@ -69,7 +69,7 @@ rules:
 ```
 
 ```yaml
-# ❌ Bad: Overly permissive cluster-admin binding
+# Bad: Overly permissive cluster-admin binding
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
@@ -378,11 +378,11 @@ spec:
 
 | CNI Plugin | NetworkPolicy Support | Additional Features |
 |-----------|----------------------|-------------------|
-| **Calico** | ✅ Full | Global policies, DNS policies |
-| **Cilium** | ✅ Full | L7 policies, eBPF, service mesh |
-| **Weave Net** | ✅ Full | Encryption |
-| **Flannel** | ❌ None | Need to add Calico on top |
-| **Default (kubenet)** | ❌ None | Not suitable for production |
+| **Calico** | Full | Global policies, DNS policies |
+| **Cilium** | Full | L7 policies, eBPF, service mesh |
+| **Weave Net** | Full | Encryption |
+| **Flannel** | None | Need to add Calico on top |
+| **Default (kubenet)** | None | Not suitable for production |
 
 ---
 
@@ -471,12 +471,12 @@ kubeseal --format=yaml < secret.yaml > sealed-secret.yaml
 |---------|-------------------------------|-----------------|----------------|------|
 | **Architecture** | K8s operator syncs from external store | Separate server + agent/injector | Controller decrypts in cluster | CLI encrypts/decrypts files |
 | **Secret storage** | AWS SM, GCP SM, Azure KV, Vault | Vault server (self-managed) | Encrypted in git (cluster decrypts) | Encrypted in git (keys in KMS) |
-| **Rotation** | ✅ Auto (refreshInterval) | ✅ Dynamic secrets (TTL) | ❌ Manual re-seal | ❌ Manual re-encrypt |
-| **GitOps friendly** | ✅ (ExternalSecret CRD in git) | Partial (agent config in git) | ✅ (SealedSecret in git) | ✅ (encrypted files in git) |
+| **Rotation** | Auto (refreshInterval) | Dynamic secrets (TTL) | Manual re-seal | Manual re-encrypt |
+| **GitOps friendly** | (ExternalSecret CRD in git) | Partial (agent config in git) | (SealedSecret in git) | (encrypted files in git) |
 | **Complexity** | Low-Medium | High (Vault ops overhead) | Low | Low |
-| **Multi-cluster** | ✅ (ClusterSecretStore) | ✅ (centralized Vault) | ❌ (per-cluster keys) | ✅ (shared KMS keys) |
+| **Multi-cluster** | (ClusterSecretStore) | (centralized Vault) | (per-cluster keys) | (shared KMS keys) |
 | **Audit trail** | Cloud provider logs | Vault audit logs (detailed) | Limited | Cloud KMS logs |
-| **Dynamic secrets** | ❌ (syncs static secrets) | ✅ (DB creds on-demand, TTL) | ❌ | ❌ |
+| **Dynamic secrets** | (syncs static secrets) | (DB creds on-demand, TTL) | No | No |
 | **Cost** | Free + cloud provider pricing | Free (OSS) or $$$ (Enterprise) | Free | Free + KMS pricing |
 | **Best for** | Cloud-native teams, multi-cloud | Enterprises needing dynamic secrets | Simple GitOps, small teams | Developers, simple encryption |
 
@@ -889,18 +889,18 @@ gcloud container clusters update my-cluster \
 
 | Security Feature | EKS | GKE | AKS |
 |-----------------|-----|-----|-----|
-| **Control plane managed** | ✅ | ✅ | ✅ |
+| **Control plane managed** | Yes | Yes | Yes |
 | **Auto security patches** | Node groups only | Autopilot: full | AKS Automatic |
 | **Secrets encryption** | KMS envelope (opt-in) | Application-layer (opt-in) | Azure Key Vault (opt-in) |
 | **Workload identity** | Pod Identity / IRSA | Workload Identity | Workload Identity |
-| **Binary authorization** | ❌ (use Kyverno) | ✅ Native | ❌ (use Ratify) |
+| **Binary authorization** | (use Kyverno) | Native | (use Ratify) |
 | **Built-in image scanning** | ECR + Inspector | Artifact Analysis | Defender for Containers |
 | **Network policy** | Calico/Cilium (add-on) | Dataplane V2 (Cilium) | Calico / Cilium (Azure CNI) |
 | **Runtime threat detection** | GuardDuty EKS Runtime | Security Command Center | Defender for Containers |
 | **Audit logging** | CloudWatch (opt-in) | Cloud Audit Logs (default) | Azure Monitor (opt-in) |
-| **Private cluster** | ✅ Private endpoint | ✅ Private cluster | ✅ Private cluster |
+| **Private cluster** | Private endpoint | Private cluster | Private cluster |
 | **Node OS** | AL2, Bottlerocket, Ubuntu | Container-Optimized OS, Ubuntu | Ubuntu, Azure Linux |
-| **FIPS 140-2** | ✅ (Bottlerocket FIPS) | ✅ (GKE Sandbox) | ✅ (Azure Linux FIPS) |
+| **FIPS 140-2** | (Bottlerocket FIPS) | (GKE Sandbox) | (Azure Linux FIPS) |
 
 > **Key insight:** Managed K8s = provider manages control plane. You still own: workload security, RBAC, network policies, secrets, image verification, and runtime monitoring.
 
