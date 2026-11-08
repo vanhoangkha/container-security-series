@@ -4,7 +4,7 @@
   <img src="https://img.shields.io/badge/2026-Edition-green?style=for-the-badge" alt="2026"/>
 </p>
 
-<h1 align="center">🔒 Container Security Series</h1>
+<h1 align="center">Container Security Series</h1>
 
 <p align="center">
   <strong>Comprehensive 8-part series covering container security from image to runtime, from build to incident response — including AI-era threats.</strong>
@@ -28,7 +28,7 @@
 
 ---
 
-## 📚 Table of Contents
+## Table of Contents
 
 | # | Part | Topics | Read Time |
 |---|------|--------|-----------|
@@ -45,7 +45,7 @@
 
 ---
 
-## 🎯 Quick Start
+## Quick Start
 
 **New to container security?** Read in order (Part 1 → 8).
 
@@ -66,7 +66,7 @@
 
 ---
 
-## 🛠️ Recommended Stack
+## Recommended Stack
 
 ### Open Source (Free)
 
@@ -88,7 +88,7 @@ Comply:   Prisma Cloud (broadest coverage)
 
 ---
 
-## 📊 Key Statistics (2026)
+## Key Statistics (2026)
 
 | Metric | Value | Source |
 |--------|-------|--------|
@@ -103,7 +103,7 @@ Comply:   Prisma Cloud (broadest coverage)
 
 ---
 
-## 🏗️ Repository Structure
+## Repository Structure
 
 ```
 container-security-series/
@@ -135,18 +135,18 @@ container-security-series/
 
 ---
 
-## 📖 What You'll Learn
+## What You'll Learn
 
-- ✅ How container security works across the entire lifecycle
-- ✅ Practical Dockerfile hardening (before/after examples)
-- ✅ SBOM generation, image signing with Sigstore/Cosign
-- ✅ Runtime threat detection with Falco & eBPF
-- ✅ Kubernetes hardening (RBAC, PSS, NetworkPolicies, Secrets)
-- ✅ Zero Trust networking with mTLS and service mesh
-- ✅ Tool comparison with cost analysis (OSS vs Commercial)
-- ✅ Ready-to-run automation scripts for cluster hardening
-- ✅ Terraform modules for hardened EKS clusters
-- ✅ **NEW:** AI agent threats and LLM workload security (2026)
+- How container security works across the entire lifecycle
+- Practical Dockerfile hardening (before/after examples)
+- SBOM generation, image signing with Sigstore/Cosign
+- Runtime threat detection with Falco & eBPF
+- Kubernetes hardening (RBAC, PSS, NetworkPolicies, Secrets)
+- Zero Trust networking with mTLS and service mesh
+- Tool comparison with cost analysis (OSS vs Commercial)
+- Ready-to-run automation scripts for cluster hardening
+- Terraform modules for hardened EKS clusters
+- **NEW:** AI agent threats and LLM workload security (2026)
 
 ---
 
@@ -176,17 +176,17 @@ Series nay cover phan **Security** cua [Platform Engineering Roadmap](https://mb
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
 Contributions are welcome! See [CONTRIBUTING.md](./CONTRIBUTING.md) for guidelines.
 
-- 🐛 Found an error? Open an issue
-- 💡 Have a suggestion? Open a PR
-- ⭐ Found this useful? Give it a star!
+- Found an error? Open an issue
+- Have a suggestion? Open a PR
+- Found this useful? Give it a star!
 
 ---
 
-## 👤 Author
+## Author
 
 **Van Hoang Kha**
 
@@ -194,13 +194,13 @@ Contributions are welcome! See [CONTRIBUTING.md](./CONTRIBUTING.md) for guidelin
 
 ---
 
-## 📄 License
+## License
 
 This project is licensed under the [MIT License](./LICENSE).
 
 ---
 
-## 🙏 Sources & Acknowledgments
+## Sources & Acknowledgments
 
 Based on research from 40+ industry sources including:
 
@@ -209,7 +209,7 @@ Sysdig • Wiz • Docker • AquilaX • CNCF • Microsoft • Aqua Security �
 ---
 
 <p align="center">
-  <strong>⭐ Star this repo if you find it useful!</strong>
+  <strong>Star this repo if you find it useful!</strong>
 </p>
 
 <p align="center">

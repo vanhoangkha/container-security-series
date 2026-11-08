@@ -49,11 +49,11 @@ Level 3 → Level 4:
 
 #### 1. Use Minimal, Trusted Base Images
 ```dockerfile
-# ✅ Distroless: no shell, no package manager, minimal CVEs
+# Distroless: no shell, no package manager, minimal CVEs
 FROM gcr.io/distroless/static-debian12
-# ✅ Alpine: small attack surface (~5MB)
+# Alpine: small attack surface (~5MB)
 FROM alpine:3.19
-# ❌ Full OS images: hundreds of unnecessary packages + CVEs
+# Full OS images: hundreds of unnecessary packages + CVEs
 FROM ubuntu:22.04
 ```
 
@@ -178,7 +178,7 @@ securityContext:
 
 #### 16. Never Store Secrets in Environment Variables or Images
 ```yaml
-# ✅ External Secrets Operator
+# External Secrets Operator
 apiVersion: external-secrets.io/v1beta1
 kind: ExternalSecret
 spec:
@@ -235,120 +235,120 @@ rules:
 
 ## 3. Comprehensive Security Checklist
 
-### 🔨 BUILD PHASE
+### BUILD PHASE
 
 | # | Control | Priority | Status |
 |---|---------|----------|--------|
-| 1 | Use minimal/distroless base images | Critical | ☐ |
-| 2 | Pin base image by digest (not tag) | Critical | ☐ |
-| 3 | Multi-stage builds (build ≠ runtime image) | High | ☐ |
-| 4 | Image scanning in CI/CD pipeline | Critical | ☐ |
-| 5 | Fail pipeline on CRITICAL CVEs | Critical | ☐ |
-| 6 | SBOM generated every build | High | ☐ |
-| 7 | Image signed with Cosign (keyless) | High | ☐ |
-| 8 | IaC scanning (Trivy/Checkov) | High | ☐ |
-| 9 | Secret scanning in code/config | Critical | ☐ |
-| 10 | Dependency scanning (SCA) | High | ☐ |
-| 11 | No secrets in Dockerfile or image layers | Critical | ☐ |
-| 12 | Non-root USER in Dockerfile | Critical | ☐ |
-| 13 | .dockerignore excludes sensitive files | Medium | ☐ |
-| 14 | COPY instead of ADD (no URL downloads) | Medium | ☐ |
-| 15 | Locked package versions in lockfiles | High | ☐ |
+| 1 | Use minimal/distroless base images | Critical |  |
+| 2 | Pin base image by digest (not tag) | Critical |  |
+| 3 | Multi-stage builds (build ≠ runtime image) | High |  |
+| 4 | Image scanning in CI/CD pipeline | Critical |  |
+| 5 | Fail pipeline on CRITICAL CVEs | Critical |  |
+| 6 | SBOM generated every build | High |  |
+| 7 | Image signed with Cosign (keyless) | High |  |
+| 8 | IaC scanning (Trivy/Checkov) | High |  |
+| 9 | Secret scanning in code/config | Critical |  |
+| 10 | Dependency scanning (SCA) | High |  |
+| 11 | No secrets in Dockerfile or image layers | Critical |  |
+| 12 | Non-root USER in Dockerfile | Critical |  |
+| 13 | .dockerignore excludes sensitive files | Medium |  |
+| 14 | COPY instead of ADD (no URL downloads) | Medium |  |
+| 15 | Locked package versions in lockfiles | High |  |
 
-### 🚀 DEPLOY PHASE
-
-| # | Control | Priority | Status |
-|---|---------|----------|--------|
-| 16 | Image signature verified at admission | High | ☐ |
-| 17 | Only approved registries allowed | High | ☐ |
-| 18 | Pod Security Standards: Restricted | Critical | ☐ |
-| 19 | Default-deny NetworkPolicy applied | Critical | ☐ |
-| 20 | Resource limits set on all containers | High | ☐ |
-| 21 | No `latest` tag in production | High | ☐ |
-| 22 | Liveness/readiness probes configured | Medium | ☐ |
-| 23 | Anti-affinity for HA | Medium | ☐ |
-| 24 | PodDisruptionBudget defined | Medium | ☐ |
-
-### 🔒 RUNTIME PHASE
+### DEPLOY PHASE
 
 | # | Control | Priority | Status |
 |---|---------|----------|--------|
-| 25 | `runAsNonRoot: true` | Critical | ☐ |
-| 26 | `allowPrivilegeEscalation: false` | Critical | ☐ |
-| 27 | `readOnlyRootFilesystem: true` | High | ☐ |
-| 28 | `capabilities.drop: ["ALL"]` | Critical | ☐ |
-| 29 | Seccomp profile applied | High | ☐ |
-| 30 | No hostNetwork/hostPID/hostIPC | Critical | ☐ |
-| 31 | No privileged containers | Critical | ☐ |
-| 32 | No hostPath volumes (or strictly limited) | Critical | ☐ |
-| 33 | `automountServiceAccountToken: false` | High | ☐ |
-| 34 | Falco/Tetragon runtime detection | High | ☐ |
-| 35 | AppArmor/SELinux profiles | Medium | ☐ |
+| 16 | Image signature verified at admission | High |  |
+| 17 | Only approved registries allowed | High |  |
+| 18 | Pod Security Standards: Restricted | Critical |  |
+| 19 | Default-deny NetworkPolicy applied | Critical |  |
+| 20 | Resource limits set on all containers | High |  |
+| 21 | No `latest` tag in production | High |  |
+| 22 | Liveness/readiness probes configured | Medium |  |
+| 23 | Anti-affinity for HA | Medium |  |
+| 24 | PodDisruptionBudget defined | Medium |  |
 
-### 🌐 NETWORK PHASE
+### RUNTIME PHASE
 
 | # | Control | Priority | Status |
 |---|---------|----------|--------|
-| 36 | Default-deny ingress AND egress | Critical | ☐ |
-| 37 | Explicit allow rules per service pair | Critical | ☐ |
-| 38 | Cloud metadata (169.254.169.254) blocked | Critical | ☐ |
-| 39 | mTLS enabled (service mesh) | High | ☐ |
-| 40 | L7 authorization policies | Medium | ☐ |
-| 41 | Egress restricted to known endpoints | High | ☐ |
-| 42 | DNS policies (prevent exfiltration) | Medium | ☐ |
-| 43 | API Gateway with rate limiting + WAF | High | ☐ |
-| 44 | CNI with policy enforcement (Calico/Cilium) | Critical | ☐ |
+| 25 | `runAsNonRoot: true` | Critical |  |
+| 26 | `allowPrivilegeEscalation: false` | Critical |  |
+| 27 | `readOnlyRootFilesystem: true` | High |  |
+| 28 | `capabilities.drop: ["ALL"]` | Critical |  |
+| 29 | Seccomp profile applied | High |  |
+| 30 | No hostNetwork/hostPID/hostIPC | Critical |  |
+| 31 | No privileged containers | Critical |  |
+| 32 | No hostPath volumes (or strictly limited) | Critical |  |
+| 33 | `automountServiceAccountToken: false` | High |  |
+| 34 | Falco/Tetragon runtime detection | High |  |
+| 35 | AppArmor/SELinux profiles | Medium |  |
 
-### 🔑 SECRETS & DATA
-
-| # | Control | Priority | Status |
-|---|---------|----------|--------|
-| 45 | etcd encryption at rest | Critical | ☐ |
-| 46 | External secrets manager (Vault/AWS SM) | High | ☐ |
-| 47 | No secrets in env vars (use volumes) | High | ☐ |
-| 48 | Secret rotation automated | Medium | ☐ |
-| 49 | Sealed Secrets for GitOps | Medium | ☐ |
-| 50 | Volume encryption (encrypted PVs) | Medium | ☐ |
-
-### 🏛️ CONTROL PLANE
+### NETWORK PHASE
 
 | # | Control | Priority | Status |
 |---|---------|----------|--------|
-| 51 | `--anonymous-auth=false` | Critical | ☐ |
-| 52 | `--authorization-mode=Node,RBAC` | Critical | ☐ |
-| 53 | Audit logging enabled | Critical | ☐ |
-| 54 | Private API server endpoint | High | ☐ |
-| 55 | TLS 1.2+ only | High | ☐ |
-| 56 | etcd mutual TLS | Critical | ☐ |
-| 57 | Admission controllers enabled | High | ☐ |
-| 58 | Control plane logging (CloudWatch/Stackdriver) | High | ☐ |
+| 36 | Default-deny ingress AND egress | Critical |  |
+| 37 | Explicit allow rules per service pair | Critical |  |
+| 38 | Cloud metadata (169.254.169.254) blocked | Critical |  |
+| 39 | mTLS enabled (service mesh) | High |  |
+| 40 | L7 authorization policies | Medium |  |
+| 41 | Egress restricted to known endpoints | High |  |
+| 42 | DNS policies (prevent exfiltration) | Medium |  |
+| 43 | API Gateway with rate limiting + WAF | High |  |
+| 44 | CNI with policy enforcement (Calico/Cilium) | Critical |  |
 
-### 👤 RBAC & IAM
-
-| # | Control | Priority | Status |
-|---|---------|----------|--------|
-| 59 | No wildcard verbs (`*`) in roles | Critical | ☐ |
-| 60 | No cluster-admin for workloads | Critical | ☐ |
-| 61 | Service accounts per workload (not default) | High | ☐ |
-| 62 | Token expiration (projected volumes) | Medium | ☐ |
-| 63 | OIDC for user authentication | High | ☐ |
-| 64 | Regular RBAC audit (quarterly) | High | ☐ |
-| 65 | Pod Identity/IRSA for cloud access | High | ☐ |
-
-### 📊 MONITORING & COMPLIANCE
+### SECRETS & DATA
 
 | # | Control | Priority | Status |
 |---|---------|----------|--------|
-| 66 | Runtime threat detection (Falco) | High | ☐ |
-| 67 | Audit logs shipped to SIEM | High | ☐ |
-| 68 | CIS benchmark quarterly (kube-bench) | High | ☐ |
-| 69 | Alert on suspicious pod creation | High | ☐ |
-| 70 | Alert on privilege escalation attempts | Critical | ☐ |
-| 71 | Network flow monitoring | Medium | ☐ |
-| 72 | Continuous vulnerability re-scanning | High | ☐ |
-| 73 | Incident response plan documented | High | ☐ |
-| 74 | Forensics capability (snapshot, pause) | Medium | ☐ |
-| 75 | Compliance reports generated (SOC2, PCI) | Varies | ☐ |
+| 45 | etcd encryption at rest | Critical |  |
+| 46 | External secrets manager (Vault/AWS SM) | High |  |
+| 47 | No secrets in env vars (use volumes) | High |  |
+| 48 | Secret rotation automated | Medium |  |
+| 49 | Sealed Secrets for GitOps | Medium |  |
+| 50 | Volume encryption (encrypted PVs) | Medium |  |
+
+### CONTROL PLANE
+
+| # | Control | Priority | Status |
+|---|---------|----------|--------|
+| 51 | `--anonymous-auth=false` | Critical |  |
+| 52 | `--authorization-mode=Node,RBAC` | Critical |  |
+| 53 | Audit logging enabled | Critical |  |
+| 54 | Private API server endpoint | High |  |
+| 55 | TLS 1.2+ only | High |  |
+| 56 | etcd mutual TLS | Critical |  |
+| 57 | Admission controllers enabled | High |  |
+| 58 | Control plane logging (CloudWatch/Stackdriver) | High |  |
+
+### RBAC & IAM
+
+| # | Control | Priority | Status |
+|---|---------|----------|--------|
+| 59 | No wildcard verbs (`*`) in roles | Critical |  |
+| 60 | No cluster-admin for workloads | Critical |  |
+| 61 | Service accounts per workload (not default) | High |  |
+| 62 | Token expiration (projected volumes) | Medium |  |
+| 63 | OIDC for user authentication | High |  |
+| 64 | Regular RBAC audit (quarterly) | High |  |
+| 65 | Pod Identity/IRSA for cloud access | High |  |
+
+### MONITORING & COMPLIANCE
+
+| # | Control | Priority | Status |
+|---|---------|----------|--------|
+| 66 | Runtime threat detection (Falco) | High |  |
+| 67 | Audit logs shipped to SIEM | High |  |
+| 68 | CIS benchmark quarterly (kube-bench) | High |  |
+| 69 | Alert on suspicious pod creation | High |  |
+| 70 | Alert on privilege escalation attempts | Critical |  |
+| 71 | Network flow monitoring | Medium |  |
+| 72 | Continuous vulnerability re-scanning | High |  |
+| 73 | Incident response plan documented | High |  |
+| 74 | Forensics capability (snapshot, pause) | Medium |  |
+| 75 | Compliance reports generated (SOC2, PCI) | Varies |  |
 
 ---
 
@@ -359,14 +359,14 @@ rules:
 ```
 Priority: Stop the bleeding
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━
-✓ Image scanning in CI/CD (Trivy, fail on CRITICAL)
-✓ Non-root containers (runAsNonRoot: true)
-✓ Drop all capabilities
-✓ No privileged containers
-✓ Default-deny network policies
-✓ Block metadata service access
-✓ Disable anonymous auth on API server
-✓ Enable audit logging
+Image scanning in CI/CD (Trivy, fail on CRITICAL)
+Non-root containers (runAsNonRoot: true)
+Drop all capabilities
+No privileged containers
+Default-deny network policies
+Block metadata service access
+Disable anonymous auth on API server
+Enable audit logging
 ```
 
 ### Phase 2: Hardening (Week 5-8)
@@ -374,14 +374,14 @@ Priority: Stop the bleeding
 ```
 Priority: Reduce attack surface
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━
-✓ Pod Security Standards (Restricted)
-✓ Kyverno admission policies
-✓ Secrets in external manager (not etcd plaintext)
-✓ Service accounts per workload
-✓ automountServiceAccountToken: false
-✓ readOnlyRootFilesystem: true
-✓ Seccomp RuntimeDefault
-✓ RBAC audit and cleanup
+Pod Security Standards (Restricted)
+Kyverno admission policies
+Secrets in external manager (not etcd plaintext)
+Service accounts per workload
+automountServiceAccountToken: false
+readOnlyRootFilesystem: true
+Seccomp RuntimeDefault
+RBAC audit and cleanup
 ```
 
 ### Phase 3: Detection (Week 9-12)
@@ -389,12 +389,12 @@ Priority: Reduce attack surface
 ```
 Priority: Know when you're attacked
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━
-✓ Falco deployed (eBPF driver)
-✓ Alerting pipeline (Falcosidekick → Slack/PagerDuty)
-✓ SIEM integration
-✓ Network flow monitoring
-✓ CIS benchmark automated (kube-bench)
-✓ Continuous vulnerability re-scanning
+Falco deployed (eBPF driver)
+Alerting pipeline (Falcosidekick → Slack/PagerDuty)
+SIEM integration
+Network flow monitoring
+CIS benchmark automated (kube-bench)
+Continuous vulnerability re-scanning
 ```
 
 ### Phase 4: Supply Chain (Month 4-5)
@@ -402,13 +402,13 @@ Priority: Know when you're attacked
 ```
 Priority: Trust but verify
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━
-✓ SBOM generation (Syft, every build)
-✓ Image signing (Cosign, keyless)
-✓ Signature verification at admission
-✓ Only approved registries
-✓ Distroless/minimal base images
-✓ Multi-stage builds
-✓ Pin dependencies by digest
+SBOM generation (Syft, every build)
+Image signing (Cosign, keyless)
+Signature verification at admission
+Only approved registries
+Distroless/minimal base images
+Multi-stage builds
+Pin dependencies by digest
 ```
 
 ### Phase 5: Zero Trust (Month 6+)
@@ -416,13 +416,13 @@ Priority: Trust but verify
 ```
 Priority: Defense in depth
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━
-✓ Service mesh (mTLS everywhere)
-✓ L7 authorization policies
-✓ SPIFFE/SPIRE workload identity
-✓ Tetragon enforcement
-✓ DNS policies
-✓ Automated incident response
-✓ Full compliance automation
+Service mesh (mTLS everywhere)
+L7 authorization policies
+SPIFFE/SPIRE workload identity
+Tetragon enforcement
+DNS policies
+Automated incident response
+Full compliance automation
 ```
 
 ---
@@ -453,17 +453,17 @@ Priority: Defense in depth
 │                                                           │
 │  Critical CVEs in Production: 3    ▼ (was 12 last month)│
 │  High CVEs in Production:     27   ▼ (was 45 last month)│
-│  Images without scan:         0    ✓                     │
-│  Unsigned images running:     2    ⚠ (investigate)       │
+│ Images without scan: 0 │
+│ Unsigned images running: 2 (investigate) │
 │                                                           │
 │  Runtime Alerts (24h):        7    (5 true, 2 false pos) │
 │  Network Policy Coverage:     94%  ▲                     │
 │  PSS Compliance:              97%  ▲                     │
 │  CIS Benchmark Score:         82%  ▲                     │
 │                                                           │
-│  Containers as Root:          3    ⚠ (kube-system only)  │
-│  Privileged Containers:       1    ⚠ (CNI agent)         │
-│  Secrets in Env Vars:         5    ❌ (migrating)         │
+│ Containers as Root: 3 (kube-system only) │
+│ Privileged Containers: 1 (CNI agent) │
+│ Secrets in Env Vars: 5 (migrating) │
 │                                                           │
 └─────────────────────────────────────────────────────────┘
 ```
@@ -850,6 +850,6 @@ echo "  With CRITICAL CVEs: $(grep -l '"CRITICAL"' $OUTPUT_DIR/*.json 2>/dev/nul
 
 ---
 
-**🎉 End of Container Security Series**
+**End of Container Security Series**
 
 Cảm ơn bạn đã đọc series này. Container security là một hành trình liên tục, không phải điểm đến. Bắt đầu với Phase 1, iterate continuously, và nhớ: **"Shift left, but never skip right."**

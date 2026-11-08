@@ -1,6 +1,6 @@
 # Contributing to Container Security Series
 
-Thank you for your interest in contributing! 🎉
+Thank you for your interest in contributing!
 
 ## How to Contribute
 
@@ -28,11 +28,11 @@ Thank you for your interest in contributing! 🎉
 
 ### What We're Looking For
 
-- 🐛 Bug fixes (typos, incorrect commands, broken YAML)
-- 📊 Updated statistics (newer reports, surveys)
-- 🛠️ New tool examples or comparisons
-- 🔒 New CVEs or attack techniques
-- 🌐 Translations
+- Bug fixes (typos, incorrect commands, broken YAML)
+- Updated statistics (newer reports, surveys)
+- New tool examples or comparisons
+- New CVEs or attack techniques
+- Translations
 
 ## Code of Conduct
 

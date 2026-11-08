@@ -149,11 +149,11 @@ Detection approach:                Detection approach:
 > — ARMO Security
 
 **Example: Legitimate-looking lateral movement**
-1. Agent reads ConfigMap (allowed by RBAC) ✅
-2. Agent makes HTTP request to internal service (allowed by NetworkPolicy) ✅
-3. Agent reads response containing credentials (application-level, invisible to K8s) ✅
-4. Agent uses credentials to access database (legitimate connection) ✅
-5. Agent exfiltrates data via allowed egress endpoint ✅
+1. Agent reads ConfigMap (allowed by RBAC)
+2. Agent makes HTTP request to internal service (allowed by NetworkPolicy)
+3. Agent reads response containing credentials (application-level, invisible to K8s)
+4. Agent uses credentials to access database (legitimate connection)
+5. Agent exfiltrates data via allowed egress endpoint
 
 **Each step is policy-compliant. The sequence is an attack.**
 
@@ -659,4 +659,4 @@ spec:
 
 ---
 
-**🎯 This is the cutting edge of container security. The AI era requires new thinking — from signature-based detection to intent-based analysis, from single-event rules to causal chain reasoning.**
+**This is the cutting edge of container security. The AI era requires new thinking — from signature-based detection to intent-based analysis, from single-event rules to causal chain reasoning.**

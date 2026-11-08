@@ -280,8 +280,8 @@ docker trust inspect --pretty myregistry/myapp:latest
 Tag = Mutable (có thể bị move sang image khác)
 Digest = Immutable (SHA256 of image manifest)
 
-✅ Sign: myapp@sha256:abc123...
-❌ Sign: myapp:latest
+Sign: myapp@sha256:abc123...
+Sign: myapp:latest
 ```
 
 ---
@@ -319,16 +319,16 @@ cosign attest \
 ### 7.1. Use Minimal Base Images
 
 ```dockerfile
-# ❌ Bad: Full OS image (hundreds of CVEs)
+# Bad: Full OS image (hundreds of CVEs)
 FROM ubuntu:22.04
 
-# ✅ Better: Minimal distro
+# Better: Minimal distro
 FROM alpine:3.19
 
-# ✅ Best: Distroless (no shell, no package manager)
+# Best: Distroless (no shell, no package manager)
 FROM gcr.io/distroless/static-debian12
 
-# ✅ Best: Hardened images (near-zero CVEs)
+# Best: Hardened images (near-zero CVEs)
 FROM docker.io/library/node:20-alpine  # → Replace with hardened variant
 ```
 
@@ -353,11 +353,11 @@ ENTRYPOINT ["/server"]
 ### 7.3. Pin Dependencies
 
 ```dockerfile
-# ❌ Bad: Unpinned
+# Bad: Unpinned
 FROM node:latest
 RUN npm install express
 
-# ✅ Good: Pinned versions + digest
+# Good: Pinned versions + digest
 FROM node:20.11.1-alpine3.19@sha256:abc123...
 COPY package.json package-lock.json ./
 RUN npm ci --only=production
@@ -525,7 +525,7 @@ sign:
 ### 10.1. Vulnerable Dockerfile (Before)
 
 ```dockerfile
-# ❌ INSECURE Dockerfile - 8 security issues
+# INSECURE Dockerfile - 8 security issues
 FROM ubuntu:latest
 MAINTAINER admin@company.com
 
@@ -593,7 +593,7 @@ Dockerfile:8 DL3059 info: Multiple consecutive RUN instructions
 ### 10.3. Secure Dockerfile (After)
 
 ```dockerfile
-# ✅ SECURE Dockerfile - all issues fixed
+# SECURE Dockerfile - all issues fixed
 FROM python:3.12.3-alpine3.19@sha256:a1b2c3d4...
 
 # Metadata via LABEL (not MAINTAINER)

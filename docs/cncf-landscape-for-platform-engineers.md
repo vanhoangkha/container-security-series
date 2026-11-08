@@ -233,12 +233,12 @@ Tháng 6+: Developer Experience
 
 | Giai đoạn | Đạt được | Project tiếp theo |
 |-----------|----------|-------------------|
-| K8s chạy ổn, team biết kubectl | ✅ | Cilium + ArgoCD |
-| GitOps hoạt động, deploy từ Git | ✅ | Kyverno + Prometheus |
-| Policies enforce, metrics thu thập | ✅ | Falco + External Secrets |
-| Security stack đầy đủ | ✅ | OpenTelemetry + Crossplane |
-| Observability unified | ✅ | Backstage + Argo Rollouts |
-| Self-service cho developer | ✅ | SPIFFE/SPIRE + advanced patterns |
+| K8s chạy ổn, team biết kubectl | Yes | Cilium + ArgoCD |
+| GitOps hoạt động, deploy từ Git | Yes | Kyverno + Prometheus |
+| Policies enforce, metrics thu thập | Yes | Falco + External Secrets |
+| Security stack đầy đủ | Yes | OpenTelemetry + Crossplane |
+| Observability unified | Yes | Backstage + Argo Rollouts |
+| Self-service cho developer | Yes | SPIFFE/SPIRE + advanced patterns |
 
 **Quy tắc vàng:** Không thêm tool mới cho đến khi tool hiện tại chạy ổn định và team hiểu rõ.
 

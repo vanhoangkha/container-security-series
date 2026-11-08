@@ -33,14 +33,14 @@ Không giống traditional security approaches, container security phải addres
 
 | Layer | Cloud Provider | User |
 |-------|---------------|------|
-| Physical hardware, hypervisors | ✅ | |
-| Managed K8s control plane | ✅ | |
-| Container images | | ✅ |
-| Application code | | ✅ |
-| Secrets management | | ✅ |
-| Network policies | | ✅ |
-| Access controls | | ✅ |
-| Runtime monitoring | | ✅ |
+| Physical hardware, hypervisors | Yes | |
+| Managed K8s control plane | Yes | |
+| Container images | | Yes |
+| Application code | | Yes |
+| Secrets management | | Yes |
+| Network policies | | Yes |
+| Access controls | | Yes |
+| Runtime monitoring | | Yes |
 
 ---
 
